@@ -1,0 +1,4 @@
+.build/
+PomodoroApp.app/
+DerivedData/
+.DS_Store
