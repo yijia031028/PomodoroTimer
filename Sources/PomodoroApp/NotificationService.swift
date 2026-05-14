@@ -1,11 +1,11 @@
 import UserNotifications
-import AppKit
+import AVFoundation
 
 final class NotificationService {
     static let shared = NotificationService()
 
     private let soundURL = URL(fileURLWithPath: "/System/Library/Sounds/Glass.aiff")
-    private var sound: NSSound?
+    private var players: [AVAudioPlayer] = []
 
     private init() {}
 
@@ -14,25 +14,18 @@ final class NotificationService {
     }
 
     func playCompletionChime() {
-        let chime = NSSound(contentsOf: soundURL, byReference: false) ?? NSSound(named: "Glass")
-        sound = chime
-        chime?.play()
-
-        // 1.5s later, second chime
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            guard let self else { return }
-            let chime2 = NSSound(contentsOf: self.soundURL, byReference: false) ?? NSSound(named: "Glass")
-            self.sound = chime2
-            chime2?.play()
+        players.removeAll()
+        playChime()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+            self?.playChime()
         }
+    }
 
-        // 3.0s later, final chime
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
-            guard let self else { return }
-            let chime3 = NSSound(contentsOf: self.soundURL, byReference: false) ?? NSSound(named: "Glass")
-            self.sound = chime3
-            chime3?.play()
-        }
+    private func playChime() {
+        guard let player = try? AVAudioPlayer(contentsOf: soundURL) else { return }
+        player.prepareToPlay()
+        player.play()
+        players.append(player)
     }
 
     func deliverNotification() {
@@ -40,7 +33,6 @@ final class NotificationService {
         content.title = "Pomodoro Timer"
         content.body = "Time is up! Your focus session is complete."
         content.sound = nil
-
         let request = UNNotificationRequest(
             identifier: UUID().uuidString,
             content: content,

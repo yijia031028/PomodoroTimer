@@ -25,5 +25,9 @@ struct ContentView: View {
         }
         .padding(32)
         .frame(minWidth: 340, minHeight: 480)
+        .onAppear {
+            NSApp.setActivationPolicy(.regular)
+            NSApp.activate(ignoringOtherApps: true)
+        }
     }
 }
